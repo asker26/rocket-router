@@ -1,15 +1,22 @@
 {
-    "name": "asker/rocket-router",
-    "description": "A fast and flexible PHP router package",
+    "name": "asker26/rocket-router",
+    "description": "A fast and flexible PHP router package with attribute-based routing and automatic route generation",
     "type": "library",
-    "keywords": ["php", "router", "routing", "http"],
+    "keywords": ["php", "router", "routing", "http", "attributes", "api", "rest"],
+    "homepage": "https://github.com/asker26/rocket-router",
     "license": "MIT",
     "authors": [
         {
-            "name": "Your Name",
-            "email": "your.email@example.com"
+            "name": "Asker Ali",
+            "email": "askeraliyev24@proton.me",
+            "homepage": "https://github.com/asker26",
+            "role": "Developer"
         }
     ],
+    "support": {
+        "issues": "https://github.com/asker26/rocket-router/issues",
+        "source": "https://github.com/asker26/rocket-router"
+    },
     "require": {
         "php": "^8.0"
     },

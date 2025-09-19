@@ -1,47 +1,82 @@
 # RocketRouter
 
-A fast and flexible PHP router package for building web applications and APIs.
+A PHP package for attribute-based routing with automatic route generation from controller classes.
 
 ## Installation
 
 Install via Composer:
 
 ```bash
-composer require asker/rocket-router
+composer require asker26/rocket-router
 ```
+
+## Features
+
+- **Attribute-based routing** using PHP 8+ attributes
+- **Automatic route discovery** from controller classes
+- **Route cache generation** for improved performance
+- **Console command** for easy route generation
+- **Support for all HTTP methods** (GET, POST, PUT, DELETE, PATCH)
 
 ## Usage
 
-### Basic Usage
+### 1. Define Controllers with Attributes
+
+Create controller classes using the provided attributes:
 
 ```php
 <?php
 
-require_once 'vendor/autoload.php';
+use RocketRouter\Attributes\ApiController;
+use RocketRouter\Attributes\Route;
+use RocketRouter\Attributes\RouteGet;
+use RocketRouter\Attributes\RoutePost;
 
-use RocketRouter\Router;
+#[ApiController]
+#[Route('/api/users')]
+class UserController
+{
+    #[RouteGet('')]
+    public function index()
+    {
+        // GET /api/users
+        return json_encode(['users' => []]);
+    }
 
-$router = new Router();
+    #[RoutePost('')]
+    public function store()
+    {
+        // POST /api/users
+        return json_encode(['message' => 'User created']);
+    }
 
-// Define routes
-$router->get('/', function() {
-    return 'Hello World!';
-});
-
-$router->post('/api/users', function() {
-    return json_encode(['message' => 'User created']);
-});
-
-// Dispatch the request
-echo $router->dispatch();
+    #[RouteGet('/{id}')]
+    public function show($id)
+    {
+        // GET /api/users/123
+        return json_encode(['user' => ['id' => $id]]);
+    }
+}
 ```
 
-### Available Methods
+### 2. Generate Routes
 
-- `get(string $path, callable $handler)` - Add a GET route
-- `post(string $path, callable $handler)` - Add a POST route
-- `addRoute(string $method, string $path, callable $handler)` - Add a route for any HTTP method
-- `dispatch()` - Process the current request and return the response
+Use the console command to scan your controllers and generate a route cache:
+
+```bash
+# Generate routes from your controllers directory
+vendor/bin/generate-routes ./app/Controllers ./cache/routes.php
+```
+
+### 3. Available Attributes
+
+- `#[ApiController]` - Mark a class as an API controller
+- `#[Route('/path')]` - Define base route for the controller
+- `#[RouteGet('/path')]` - Define GET route for a method
+- `#[RoutePost('/path')]` - Define POST route for a method
+- `#[RouteDelete('/path')]` - Define DELETE route for a method
+- `#[RoutePut('/path')]` - Define PUT route for a method (if implemented)
+- `#[RoutePatch('/path')]` - Define PATCH route for a method (if implemented)
 
 ## Requirements
 

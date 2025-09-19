@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace RocketRouter;
 
+use FilesystemIterator;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
+use RuntimeException;
 
 /**
  * Route Cache Generator
@@ -27,10 +29,8 @@ class RouteGenerator
         }
         
         $outputDir = dirname($outputFile);
-        if (!is_dir($outputDir)) {
-            if (!mkdir($outputDir, 0755, true)) {
-                throw new \RuntimeException("Cannot create output directory: {$outputDir}");
-            }
+        if (!is_dir($outputDir) && !mkdir($outputDir, 0755, true) && !is_dir($outputDir)) {
+            throw new RuntimeException("Cannot create output directory: {$outputDir}");
         }
         
         echo "Scanning for API controllers in: {$searchDirectory}\n";
@@ -56,7 +56,7 @@ class RouteGenerator
     {
         $files = [];
         $iterator = new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator($dir, RecursiveDirectoryIterator::SKIP_DOTS)
+            new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS)
         );
         
         foreach ($iterator as $file) {
@@ -99,7 +99,7 @@ class RouteGenerator
     }
     
     /**
-     * Extract namespace and class name from PHP file
+     * Extract namespace and class name from a PHP file
      */
     private function getClassInfo(string $filePath): array
     {
@@ -130,7 +130,7 @@ class RouteGenerator
      */
     private function hasApiControllerAttribute(string $content): bool
     {
-        return (bool) preg_match('/#\[ApiController\]/', $content);
+        return (bool) preg_match('/#\[ApiController]/', $content);
     }
     
     /**
@@ -138,7 +138,7 @@ class RouteGenerator
      */
     private function getBaseRoute(string $content): string
     {
-        if (preg_match('/#\[Route\([\'"]([^\'"]+)[\'"]\)\]/', $content, $matches)) {
+        if (preg_match('/#\[Route\([\'"]([^\'"]+)[\'"]\)]/', $content, $matches)) {
             return $matches[1];
         }
         return '';
@@ -154,22 +154,22 @@ class RouteGenerator
         // Split content into lines for better parsing
         $lines = explode("\n", $content);
         $currentAttributes = [];
-        
-        for ($i = 0; $i < count($lines); $i++) {
-            $line = trim($lines[$i]);
+
+        foreach ($lines as $iValue) {
+            $line = trim($iValue);
             
             // Check for route attributes
-            if (preg_match('/#\[(Route(?:Get|Post|Delete|Put|Patch))(?:\([\'"]([^\'"]*)[\'"]?\))?\]/', $line, $matches)) {
+            if (preg_match('/#\[(Route(?:Get|Post|Delete|Put|Patch))(?:\([\'"]([^\'"]*)[\'"]?\))?]/', $line, $matches)) {
                 $attributeType = $matches[1];
-                $route = isset($matches[2]) ? $matches[2] : '';
+                $route = $matches[2] ?? '';
                 
                 // Determine HTTP method
                 $httpMethod = match ($attributeType) {
+                    'RouteGet' => 'GET',
                     'RoutePost' => 'POST',
                     'RouteDelete' => 'DELETE',
                     'RoutePut' => 'PUT',
                     'RoutePatch' => 'PATCH',
-                    'RouteGet' => 'GET',
                     default => 'GET'
                 };
                 
@@ -192,12 +192,12 @@ class RouteGenerator
                 $currentAttributes = []; // Reset for next method
             }
         }
-        
+
         return $methods;
     }
     
     /**
-     * Build full route from base route and method route
+     * Build a full route from base route and method route
      */
     private function buildFullRoute(string $baseRoute, string $methodRoute): string
     {
@@ -206,11 +206,9 @@ class RouteGenerator
             $fullRoute .= '/' . $methodRoute;
         }
         
-        // Clean up route (remove double slashes, leading/trailing slashes)
         $fullRoute = trim($fullRoute, '/');
-        $fullRoute = preg_replace('/\/+/', '/', $fullRoute);
-        
-        return $fullRoute;
+
+        return preg_replace('/\/+/', '/', $fullRoute);
     }
     
     /**
@@ -226,7 +224,7 @@ class RouteGenerator
         $cacheContent .= "return " . var_export($this->routes, true) . ";\n";
         
         if (file_put_contents($outputFile, $cacheContent) === false) {
-            throw new \RuntimeException("Failed to write cache file: {$outputFile}");
+            throw new RuntimeException("Failed to write cache file: {$outputFile}");
         }
     }
     

@@ -64,7 +64,6 @@ function validateArguments(array $argv): array
 
     [$searchDirectory, $outputFile] = $argv;
 
-    // Convert relative paths to absolute paths
     if (!str_starts_with($searchDirectory, '/')) {
         $searchDirectory = getcwd() . '/' . $searchDirectory;
     }
@@ -73,7 +72,6 @@ function validateArguments(array $argv): array
         $outputFile = getcwd() . '/' . $outputFile;
     }
 
-    // Validate search directory
     if (!is_dir($searchDirectory)) {
         echo "Error: Search directory does not exist: {$searchDirectory}\n";
         exit(1);
@@ -87,13 +85,11 @@ function validateArguments(array $argv): array
     return [$searchDirectory, $outputFile];
 }
 
-// Handle help flag
 if (in_array('--help', $argv) || in_array('-h', $argv)) {
     showUsage();
     exit(0);
 }
 
-// Validate and parse arguments
 [$searchDirectory, $outputFile] = validateArguments($argv);
 
 try {
@@ -106,12 +102,11 @@ try {
     
     $routes = $generator->generate($searchDirectory, $outputFile);
     
-    // Display the routes for verification
     $generator->displayRoutes();
     
-    echo "\n✅ Route generation completed successfully!\n";
+    echo "\nRoute generation completed successfully!\n";
     
 } catch (Exception $e) {
-    echo "\n❌ Error: " . $e->getMessage() . "\n";
+    echo "\n Error: " . $e->getMessage() . "\n";
     exit(1);
 }
