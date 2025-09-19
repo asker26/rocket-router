@@ -1,0 +1,117 @@
+#!/usr/bin/env php
+<?php
+
+/**
+ * RocketRouter Route Generator Console Command
+ * 
+ * Usage: generate-routes <search-directory> <output-file>
+ * 
+ * Examples:
+ *   generate-routes ./app/Controllers ./cache/routes.php
+ *   generate-routes /path/to/controllers /path/to/routes.cache.php
+ */
+
+// Enable error reporting
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+// Try to find autoloader
+$autoloaderPaths = [
+    __DIR__ . '/../vendor/autoload.php',  // When used as dependency
+    __DIR__ . '/../../../autoload.php',   // When used in vendor/asker/rocket-router
+    __DIR__ . '/../autoload.php',         // Development
+];
+
+$autoloaderFound = false;
+foreach ($autoloaderPaths as $autoloader) {
+    if (file_exists($autoloader)) {
+        require_once $autoloader;
+        $autoloaderFound = true;
+        break;
+    }
+}
+
+if (!$autoloaderFound) {
+    echo "Error: Could not find Composer autoloader.\n";
+    echo "Make sure you have run 'composer install'.\n";
+    exit(1);
+}
+
+use RocketRouter\RouteGenerator;
+
+function showUsage(): void
+{
+    echo "RocketRouter Route Generator\n";
+    echo "===========================\n\n";
+    echo "Usage: generate-routes <search-directory> <output-file>\n\n";
+    echo "Arguments:\n";
+    echo "  search-directory  Directory to scan for controller files with #[ApiController] attribute\n";
+    echo "  output-file       Path where the generated routes cache will be saved\n\n";
+    echo "Examples:\n";
+    echo "  generate-routes ./app/Controllers ./cache/routes.php\n";
+    echo "  generate-routes /path/to/controllers /path/to/routes.cache.php\n\n";
+    echo "The command will recursively scan the search directory for PHP files containing\n";
+    echo "classes with #[ApiController] attribute and generate a route cache file.\n\n";
+}
+
+function validateArguments(array $argv): array
+{
+    if (count($argv) !== 3) {
+        showUsage();
+        echo "Error: Exactly 2 arguments required.\n";
+        exit(1);
+    }
+
+    [$searchDirectory, $outputFile] = $argv;
+
+    // Convert relative paths to absolute paths
+    if (!str_starts_with($searchDirectory, '/')) {
+        $searchDirectory = getcwd() . '/' . $searchDirectory;
+    }
+    
+    if (!str_starts_with($outputFile, '/')) {
+        $outputFile = getcwd() . '/' . $outputFile;
+    }
+
+    // Validate search directory
+    if (!is_dir($searchDirectory)) {
+        echo "Error: Search directory does not exist: {$searchDirectory}\n";
+        exit(1);
+    }
+
+    if (!is_readable($searchDirectory)) {
+        echo "Error: Search directory is not readable: {$searchDirectory}\n";
+        exit(1);
+    }
+
+    return [$searchDirectory, $outputFile];
+}
+
+// Handle help flag
+if (in_array('--help', $argv) || in_array('-h', $argv)) {
+    showUsage();
+    exit(0);
+}
+
+// Validate and parse arguments
+[$searchDirectory, $outputFile] = validateArguments($argv);
+
+try {
+    $generator = new RouteGenerator();
+    
+    echo "RocketRouter Route Generator\n";
+    echo "===========================\n\n";
+    echo "Search Directory: {$searchDirectory}\n";
+    echo "Output File: {$outputFile}\n\n";
+    
+    $routes = $generator->generate($searchDirectory, $outputFile);
+    
+    // Display the routes for verification
+    $generator->displayRoutes();
+    
+    echo "\n✅ Route generation completed successfully!\n";
+    
+} catch (Exception $e) {
+    echo "\n❌ Error: " . $e->getMessage() . "\n";
+    exit(1);
+}
