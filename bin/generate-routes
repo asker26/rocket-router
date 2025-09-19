@@ -3,23 +3,21 @@
 
 /**
  * RocketRouter Route Generator Console Command
- * 
+ *
  * Usage: generate-routes <search-directory> <output-file>
- * 
+ *
  * Examples:
  *   generate-routes ./app/Controllers ./cache/routes.php
  *   generate-routes /path/to/controllers /path/to/routes.cache.php
  */
 
-// Enable error reporting
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-// Try to find autoloader
 $autoloaderPaths = [
-    __DIR__ . '/../vendor/autoload.php',  // When used as dependency
-    __DIR__ . '/../../../autoload.php',   // When used in vendor/asker/rocket-router
-    __DIR__ . '/../autoload.php',         // Development
+        __DIR__ . '/../vendor/autoload.php',  // When used as dependency
+        __DIR__ . '/../../../autoload.php',   // When used in vendor/asker/rocket-router
+        __DIR__ . '/../autoload.php',         // Development
 ];
 
 $autoloaderFound = false;
@@ -56,7 +54,7 @@ function showUsage(): void
 
 function validateArguments(array $argv): array
 {
-    if (count($argv) !== 3) {
+    if (count($argv) !== 2) {
         showUsage();
         echo "Error: Exactly 2 arguments required.\n";
         exit(1);
@@ -67,7 +65,7 @@ function validateArguments(array $argv): array
     if (!str_starts_with($searchDirectory, '/')) {
         $searchDirectory = getcwd() . '/' . $searchDirectory;
     }
-    
+
     if (!str_starts_with($outputFile, '/')) {
         $outputFile = getcwd() . '/' . $outputFile;
     }
@@ -90,22 +88,22 @@ if (in_array('--help', $argv) || in_array('-h', $argv)) {
     exit(0);
 }
 
-[$searchDirectory, $outputFile] = validateArguments($argv);
+[$searchDirectory, $outputFile] = validateArguments(array_slice($argv, 1));
 
 try {
     $generator = new RouteGenerator();
-    
+
     echo "RocketRouter Route Generator\n";
     echo "===========================\n\n";
     echo "Search Directory: {$searchDirectory}\n";
     echo "Output File: {$outputFile}\n\n";
-    
+
     $routes = $generator->generate($searchDirectory, $outputFile);
-    
+
     $generator->displayRoutes();
-    
+
     echo "\nRoute generation completed successfully!\n";
-    
+
 } catch (Exception $e) {
     echo "\n Error: " . $e->getMessage() . "\n";
     exit(1);
