@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace RocketRouter\Attributes;
 
-use Attribute;
-
-#[Attribute(Attribute::TARGET_CLASS)]
-final class Route
+/**
+ * @internal
+ */
+class HttpMethod
 {
     public function __construct(
-        public string $route
+        public string $method,
+        public string $route = ''
     )
     {
     }
